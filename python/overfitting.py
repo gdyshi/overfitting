@@ -1,78 +1,124 @@
-# Copyright 2017 gdyshi. All Rights Reserved.
-# github: https://github.com/gdyshi
-# ==============================================================================
+###python3.5.3
+###tensorflow1.2.1
+###windows10
 
-import argparse
-import sys
-from tensorflow.examples.tutorials.mnist import input_data
 import tensorflow as tf
 import numpy as np
-
-FLAGS = None
-
-REGULARIZATION_NONE = "none"
-REGULARIZATION_L1 = "l1"
-REGULARIZATION_L2 = "l2"
-REGULARIZATION_DROP = "drop"
-
-# layers = [784, 577, 384, 256, 171, 114, 76, 51, 34, 23, 15, 10] # batch norm
-# layers = [784, 320, 160, 80, 40, 20, 10]
-layers = [784, 390, 156, 62, 25, 10]
-# layers = [784, 270, 90, 30, 10]
-# layers = [784, 90, 10]
-
-# 正则化方法选择
-REGULARIZATION = REGULARIZATION_L1
+import matplotlib.pyplot as plt
 
 
-def main(_):
-    # Import data
-    mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
-    print(layers)
-    # Create the model
-    x = tf.placeholder(tf.float32, [None, 784])
-    ws = []
-    for i in range(0, len(layers) - 1):
-        X = x if i == 0 else y
-        node_in = layers[i]
-        node_out = layers[i + 1]
-        W = tf.Variable(np.random.randn(node_in, node_out).astype('float32') / (np.sqrt(node_in)))
-        b = tf.Variable(np.random.randn(node_out).astype('float32'))
-        z = tf.matmul(X, W) + b
-        z = tf.contrib.layers.batch_norm(z, center=True, scale=True, is_training=True)
-        y = tf.nn.sigmoid(z)
-        ws.append(W)
+# 神经网络层添加
+def add_layer(layername, inputs, in_size, out_size, activation_function=None):
+    # add one more layer and return the output of this layer
+    with tf.variable_scope(layername, reuse=None):
+        Weights = tf.get_variable("weights", shape=[in_size, out_size],
+                                  initializer=tf.truncated_normal_initializer(stddev=0.1))
+        biases = tf.get_variable("biases", shape=[1, out_size],
+                                 initializer=tf.truncated_normal_initializer(stddev=0.1))
+    # Weights = tf.Variable(tf.random_normal([in_size, out_size]))
+    # biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)
+    Wx_plus_b = tf.matmul(inputs, Weights) + biases
+    if activation_function is None:
+        outputs = Wx_plus_b
+    else:
+        outputs = activation_function(Wx_plus_b)
+    return outputs
 
-    # Define loss and optimizer
-    y_ = tf.placeholder(tf.float32, [None, 10])
-    # loss = tf.reduce_mean(tf.norm(y_ - y, axis=1) ** 2) / 2
-    if REGULARIZATION == REGULARIZATION_NONE:
-        loss = tf.reduce_mean(tf.square(y - y_))
-    elif REGULARIZATION == REGULARIZATION_L1:
-        loss = tf.reduce_mean(tf.square(y - y_) + tf.contrib.layers.l2_regularizer(0.5)(ws))
-    elif REGULARIZATION == REGULARIZATION_L2:
-        loss = tf.reduce_mean(tf.square(y - y_) + tf.contrib.layers.l2_regularizer(0.5)(ws))
 
-    # loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y_, logits=z_3))
-    train_step = tf.train.GradientDescentOptimizer(3.0).minimize(loss)
+# 产生双月环数据集
+def produceData(r, w, d, num):
+    r1 = r - w / 2
+    r2 = r + w / 2
+    # 上半圆
+    theta1 = np.random.uniform(0, np.pi, num)
+    X_Col1 = np.random.uniform(r1 * np.cos(theta1), r2 * np.cos(theta1), num)[:, np.newaxis]
+    X_Row1 = np.random.uniform(r1 * np.sin(theta1), r2 * np.sin(theta1), num)[:, np.newaxis]
+    Y_label1 = np.ones(num)  # 类别标签为1
+    # 下半圆
+    theta2 = np.random.uniform(-np.pi, 0, num)
+    X_Col2 = (np.random.uniform(r1 * np.cos(theta2), r2 * np.cos(theta2), num) + r)[:, np.newaxis]
+    X_Row2 = (np.random.uniform(r1 * np.sin(theta2), r2 * np.sin(theta2), num) - d)[:, np.newaxis]
+    Y_label2 = -np.ones(num)  # 类别标签为-1,注意：由于采取双曲正切函数作为激活函数，类别标签不能为0
+    # 合并
+    X_Col = np.vstack((X_Col1, X_Col2))
+    X_Row = np.vstack((X_Row1, X_Row2))
+    X = np.hstack((X_Col, X_Row))
+    Y_label = np.hstack((Y_label1, Y_label2))
+    Y_label.shape = (num * 2, 1)
+    return X, Y_label
 
-    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-    accuracy = tf.reduce_sum(tf.cast(correct_prediction, tf.int32))
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        for i in range(20000):
-            batch_xs, batch_ys = mnist.train.next_batch(10)
-            if i % 1000 == 0:
-                train_accuracy = accuracy.eval(feed_dict={x: mnist.test.images,
-                                                          y_: mnist.test.labels})
-                print('step %d, training accuracy %g' % (i, train_accuracy))
-            train_step.run(feed_dict={x: batch_xs, y_: batch_ys})
+def produce_random_data(r, w, d, num):
+    X1 = np.random.uniform(-r - w / 2, 2 * r + w / 2, num)
+    X2 = np.random.uniform(-r - w / 2 - d, r + w / 2, num)
+    X = np.vstack((X1, X2))
+    return X.transpose()
+
+
+def collect_boundary_data(sess, xs, prediction, v_xs):
+    # global prediction
+    X = np.empty([1, 2])
+    X = list()
+    for i in range(len(v_xs)):
+        x_input = v_xs[i]
+        x_input.shape = [1, 2]
+        y_pre = sess.run(prediction, feed_dict={xs: x_input})
+        if abs(y_pre - 0) < 0.5:
+            X.append(v_xs[i])
+    return np.array(X)
+
+
+def compute_testProbabilities(sess, xs, test_x_data):
+    # global prediction
+    y_pre = sess.run(prediction, feed_dict={xs: test_x_data})
+    return y_pre
+
+
+def main():
+    x_data, y_label = produceData(10, 6, -4, 1000)
+
+    # 神经网络层添加
+    ###define placeholder for inputs to network
+    xs = tf.placeholder(tf.float32, [None, 2])
+    ys = tf.placeholder(tf.float32, [None, 1])
+    ###添加隐藏层
+    l1 = add_layer("layer1", xs, 2, 20, activation_function=tf.tanh)
+    ###添加输出层
+    prediction = add_layer("layer2", l1, 20, 1, activation_function=tf.tanh)
+    ###MSE 均方误差
+    loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction), reduction_indices=[1]))
+    ###优化器选取 学习率设置 此处学习率置为0.1
+    train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)
+    ###tensorflow变量初始化，打开会话
+    init = tf.global_variables_initializer()
+    sess = tf.Session()
+    sess.run(init)
+    ###训练
+    for i in range(2000):
+        sess.run(train_step, feed_dict={xs: x_data, ys: y_label})
+    ###产生空间随机数据
+    X_NUM = produce_random_data(10, 6, -4, 5000)
+    ###边界数据采样
+    X_b = collect_boundary_data(sess, xs, prediction, X_NUM)
+    ###画出数据
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ###设置坐标轴名称
+    plt.xlabel('x1')
+    plt.ylabel('x2')
+    ax.scatter(x_data[:, 0], x_data[:, 1], marker='x')
+    ###用采样的边界数据拟合边界曲线 7次曲线最佳
+    z1 = np.polyfit(X_b[:, 0], X_b[:, 1], 7)
+    p1 = np.poly1d(z1)
+    x = X_b[:, 0]
+    x.sort()
+    yvals = p1(x)
+    plt.plot(x, yvals, 'r', label='boundray line')
+    plt.legend(loc=4)
+    # plt.ion()
+    plt.show()
+    print('DONE!')
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='E:\data\mnist',
-                        help='Directory for storing input data')
-    FLAGS, unparsed = parser.parse_known_args()
-    tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    main()
