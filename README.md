@@ -4,6 +4,7 @@
 ---
 # 什么是过拟合
 ![过拟合](https://github.com/gdyshi/overfitting/blob/master/md_pic/480px-Overfitting.svg.png)
+![过拟合](https://github.com/gdyshi/overfitting/blob/master/md_pic/OhX9eFQ.jpg)
 >一个假设在训练数据上能够获得比其他假设更好的拟合，但是在训练数据外的数据集上却不能很好地拟合数据，此时认为这个假设出现了过拟合的现象。
 >模型把数据学习的太彻底，以至于把噪声数据的特征也学习到了。训练集的准确率很高，但是在测试集准确率却不高，无法泛化到实际应用中。
 
