@@ -1,91 +1,115 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import tensorflow as tf
-from sklearn import datasets
-
-sess = tf.Session()
-
-# 加载数据
-# iris.data = [(Sepal Length, Sepal Width, Petal Length, Petal Width)]
-iris = datasets.load_iris()
-x_vals = np.array([[x[0], x[3]] for x in iris.data])
-y_vals = np.array([1 if y == 0 else -1 for y in iris.target])
-
-# 分离训练和测试集
-train_indices = np.random.choice(len(x_vals),
-                                 round(len(x_vals)*0.8),
-                                 replace=False)
-test_indices = np.array(list(set(range(len(x_vals))) - set(train_indices)))
-x_vals_train = x_vals[train_indices]
-x_vals_test = x_vals[test_indices]
-y_vals_train = y_vals[train_indices]
-y_vals_test = y_vals[test_indices]
+import numpy as np
+import matplotlib.pyplot as plt
 
 
-# 定义模型和loss函数
-batch_size = 100
+# 产生双月环数据集
+def produceData(r, w, d, num):
+    r1 = r - w / 2
+    r2 = r + w / 2
+    # 上半圆
+    theta1 = np.random.uniform(0, np.pi, num)
+    X_Col1 = np.random.uniform(r1 * np.cos(theta1), r2 * np.cos(theta1), num)[:, np.newaxis]
+    X_Row1 = np.random.uniform(r1 * np.sin(theta1), r2 * np.sin(theta1), num)[:, np.newaxis]
+    Y_label1 = np.ones(num)  # 类别标签为1
 
-# 初始化feedin
-x_data = tf.placeholder(shape=[None, 2], dtype=tf.float32)
-y_target = tf.placeholder(shape=[None, 1], dtype=tf.float32)
+    # 下半圆
+    theta2 = np.random.uniform(-np.pi, 0, num)
+    X_Col2 = (np.random.uniform(r1 * np.cos(theta2), r2 * np.cos(theta2), num) + r)[:, np.newaxis]
+    X_Row2 = (np.random.uniform(r1 * np.sin(theta2), r2 * np.sin(theta2), num) - d)[:, np.newaxis]
+    Y_label2 = -np.ones(num)  # 类别标签为-1,注意：由于采取双曲正切函数作为激活函数，类别标签不能为0
 
-# 创建变量
-A = tf.Variable(tf.random_normal(shape=[2, 1]))
-b = tf.Variable(tf.random_normal(shape=[1, 1]))
-
-# 定义线性模型
-model_output = tf.subtract(tf.matmul(x_data, A), b)
-
-# Declare vector L2 'norm' function squared
-l2_norm = tf.reduce_sum(tf.square(A))
-
-# Loss = max(0, 1-pred*actual) + alpha * L2_norm(A)^2
-alpha = tf.constant([0.01])
-classification_term = tf.reduce_mean(tf.maximum(0., tf.subtract(1., tf.multiply(model_output, y_target))))
-loss = tf.add(classification_term, tf.multiply(alpha, l2_norm))
-
-# 开始训练数据
-my_opt = tf.train.GradientDescentOptimizer(0.01)
-train_step = my_opt.minimize(loss)
-
-init = tf.global_variables_initializer()
-sess.run(init)
-
-# Training loop
-loss_vec = []
-train_accuracy = []
-test_accuracy = []
-for i in range(20000):
-    rand_index = np.random.choice(len(x_vals_train), size=batch_size)
-    rand_x = x_vals_train[rand_index]
-    rand_y = np.transpose([y_vals_train[rand_index]])
-    sess.run(train_step, feed_dict={x_data: rand_x, y_target: rand_y})
-
-# 绘制图像
-[[a1], [a2]] = sess.run(A)
-[[b]] = sess.run(b)
-slope = -a2/a1
-y_intercept = b/a1
-best_fit = []
-
-x1_vals = [d[1] for d in x_vals]
-
-for i in x1_vals:
-    best_fit.append(slope*i+y_intercept)
+    # 合并
+    X_Col1 += np.random.normal(0, 0.55, X_Col1.shape)
+    X_Row1 += np.random.normal(0, 0.55, X_Row1.shape)
+    X_Col2 += np.random.normal(0, 0.55, X_Col2.shape)
+    X_Row2 += np.random.normal(0, 0.55, X_Row2.shape)
+    X_Col = np.vstack((X_Col1, X_Col2))
+    X_Row = np.vstack((X_Row1, X_Row2))
+    X = np.hstack((X_Col, X_Row))
+    Y_label = np.hstack((Y_label1, Y_label2))
+    Y_label.shape = (num * 2, 1)
+    return X, Y_label,X_Col1,X_Row1,X_Col2,X_Row2
 
 
-# Separate I. setosa
-setosa_x = [d[1] for i, d in enumerate(x_vals) if y_vals[i] == 1]
-setosa_y = [d[0] for i, d in enumerate(x_vals) if y_vals[i] == 1]
-not_setosa_x = [d[1] for i, d in enumerate(x_vals) if y_vals[i] == -1]
-not_setosa_y = [d[0] for i, d in enumerate(x_vals) if y_vals[i] == -1]
+def produce_random_data(r, w, d, num):
+    X1 = np.random.uniform(-r - w / 2, 2 * r + w / 2, num)
+    X2 = np.random.uniform(-r - w / 2 - d, r + w / 2, num)
+    X = np.vstack((X1, X2))
+    return X.transpose()
 
-plt.plot(setosa_x, setosa_y, 'o', label='I. setosa')
-plt.plot(not_setosa_x, not_setosa_y, 'x', label='Non-setosa')
-plt.plot(x1_vals, best_fit, 'r-', label='Linear Separator', linewidth=3)
-plt.ylim([0, 10])
-plt.legend(loc='lower right')
-plt.title('Sepal Length vs Pedal Width')
-plt.xlabel('Pedal Width')
-plt.ylabel('Sepal Length')
-plt.show()
+
+def collect_boundary_data(sess, xs, prediction, v_xs):
+    # global prediction
+    X = np.empty([1, 2])
+    X = list()
+    for i in range(len(v_xs)):
+        x_input = v_xs[i]
+        x_input.shape = [1, 2]
+        y_pre = sess.run(prediction, feed_dict={xs: x_input})
+        if abs(y_pre - 0) < 0.5:
+            X.append(v_xs[i])
+    return np.array(X)
+
+
+layers = [2, 20, 1]
+
+
+def main():
+    x_data, y_label,X_Col1,X_Row1,X_Col2,X_Row2 = produceData(10, 6, -6, 1000)
+    x_test, y_test,X_Col1_t,X_Row1_t,X_Col2_t,X_Row2_t = produceData(10, 6, -6, 500)
+    ###产生空间随机数据
+    X_NUM = produce_random_data(10, 6, -6, 5000)
+
+    x = tf.placeholder(tf.float32, [None, 2])
+    for i in range(0, len(layers) - 1):
+        X = x if i == 0 else y
+        node_in = layers[i]
+        node_out = layers[i + 1]
+        W = tf.Variable(np.random.randn(node_in, node_out).astype('float32') / (np.sqrt(node_in)))
+        b = tf.Variable(np.random.randn(node_out).astype('float32'))
+        z = tf.matmul(X, W) + b
+        # z = tf.contrib.layers.batch_norm(z, center=True, scale=True, is_training=True)
+        y = tf.nn.tanh(z)
+
+    y_ = tf.placeholder(tf.float32, [None, 1])
+    # Define loss and optimizer
+    # 均方误差
+    loss = tf.reduce_mean(tf.reduce_sum(tf.square(y - y_), reduction_indices=[1]))
+    train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)
+
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        for i in range(2000):
+            train_step.run(feed_dict={x: x_data, y_: y_label})
+            if i % 1000 == 0:
+                train_loss = loss.eval(feed_dict={x: x_data, y_: y_label})
+                test_loss = loss.eval(feed_dict={x: x_test, y_: y_test})
+                print('step %d, training loss %f%%,testing loss %f%%' % (i, 100*train_loss, 100*test_loss))
+        ###边界数据采样
+        X_b = collect_boundary_data(sess, x, y, X_NUM)
+
+    ###画出数据
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ###设置坐标轴名称
+    plt.xlabel('x1')
+    plt.ylabel('x2')
+    ax.scatter(X_Col1, X_Row1, marker='x', c = 'r')
+    ax.scatter(X_Col2, X_Row2, marker='x', c = 'r')
+    ax.scatter(X_Col1_t, X_Row1_t, marker='*', c = 'b')
+    ax.scatter(X_Col2_t, X_Row2_t, marker='*', c = 'b')
+    ###用采样的边界数据拟合边界曲线 7次曲线最佳
+    z1 = np.polyfit(X_b[:, 0], X_b[:, 1], 7)
+    p1 = np.poly1d(z1)
+    x = X_b[:, 0]
+    x.sort()
+    yvals = p1(x)
+    plt.plot(x, yvals, 'y', label='boundray line')
+    plt.legend(loc=4)
+    plt.show()
+    print('DONE!')
+
+
+if __name__ == '__main__':
+    main()

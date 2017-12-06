@@ -1,6 +1,3 @@
-###python3.5.3
-###tensorflow1.2.1
-###windows10
 
 import tensorflow as tf
 import numpy as np
