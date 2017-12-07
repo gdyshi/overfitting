@@ -3,9 +3,9 @@
 
 ---
 # 什么是过拟合
-![过拟合](https://github.com/gdyshi/overfitting/blob/master/md_pic/480px-Overfitting.svg.png)
+![过拟合](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/480px-Overfitting.svg.png)
 
-![过拟合](https://github.com/gdyshi/overfitting/blob/master/md_pic/OhX9eFQ.jpg)
+![过拟合](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/OhX9eFQ.jpg)
 >一个假设在训练数据上能够获得比其他假设更好的拟合，但是在训练数据外的数据集上却不能很好地拟合数据，此时认为这个假设出现了过拟合的现象。
 >模型把数据学习的太彻底，以至于把噪声数据的特征也学习到了。训练集的准确率很高，但是在测试集准确率却不高，无法泛化到实际应用中。
 
@@ -56,19 +56,19 @@
 
 - L1
 
-![数据清洗](https://github.com/gdyshi/overfitting/blob/master/md_pic/6jbxq15.jpg)
+![数据清洗](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/6jbxq15.jpg)
 > L1范数是指向量中各个元素绝对值之和，也叫“稀疏规则算子”。L1范数是L0范数的最优凸近似，而且它比L0范数要容易优化求解
 
 - L2
 
-![数据清洗](https://github.com/gdyshi/overfitting/blob/master/md_pic/9WnBBu1.jpg)
+![数据清洗](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/9WnBBu1.jpg)
 > L2范数是指向量各元素的平方和然后求平方根。使得参数w变小加剧的效果。更小的参数值w意味着模型的复杂度更低，对训练数据的拟合刚刚好（奥卡姆剃刀），不会过分拟合训练数据，从而使得不会过拟合，以提高模型的泛化能力。
 > 使矩阵可逆（存在唯一解）
 
 ### 网络结构正则化
 - dropout
 
-![数据清洗](https://github.com/gdyshi/overfitting/blob/master/md_pic/G9QTbi9.png)
+![数据清洗](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/G9QTbi9.png)
 > 过拟合，可以通过阻止某些特征的协同作用来缓解。在训练时候以一定的概率p来跳过一定的神经元
 
 # 实例
@@ -92,21 +92,21 @@
 | 8 |dropout  | 0.606940    | 0.614125  |
 
 ## 原始状态拟合图
-![原始状态](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_1.png)
+![原始状态](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/Figure_1.png)
 ## 使用数据清洗拟合图
-![数据清洗](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_2.png)
+![数据清洗](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/Figure_2.png)
 ## 使用增加数据量拟合图
-![增加数据量](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_3.png)
+![增加数据量](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/Figure_3.png)
 ## 使用变化学习率拟合图
-![变化学习率](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_4.png)
+![变化学习率](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/Figure_4.png)
 ## 使用简化模型拟合图
-![简化模型](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_5.png)
+![简化模型](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/Figure_5.png)
 ## 使用L1正则化拟合图
-![L1正则化](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_6.png)
+![L1正则化](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/Figure_6.png)
 ## 使用L2正则化拟合图
-![L2正则化](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_7.png)
+![L2正则化](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/Figure_7.png)
 ## 使用dropout拟合图
-![dropout](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_8.png)
+![dropout](https://raw.githubusercontent.com/gdyshi/overfitting/master/md_pic/Figure_8.png)
 
 # 结论
 > 从数据、模型、训练方法三个方向入手
