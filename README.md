@@ -4,6 +4,7 @@
 ---
 # 什么是过拟合
 ![过拟合](https://github.com/gdyshi/overfitting/blob/master/md_pic/480px-Overfitting.svg.png)
+
 ![过拟合](https://github.com/gdyshi/overfitting/blob/master/md_pic/OhX9eFQ.jpg)
 >一个假设在训练数据上能够获得比其他假设更好的拟合，但是在训练数据外的数据集上却不能很好地拟合数据，此时认为这个假设出现了过拟合的现象。
 >模型把数据学习的太彻底，以至于把噪声数据的特征也学习到了。训练集的准确率很高，但是在测试集准确率却不高，无法泛化到实际应用中。
@@ -54,20 +55,59 @@
 > L0范数是指向量中非0的元素的个数。让参数W是稀疏的,很难优化求解
 
 - L1
+![数据清洗](https://github.com/gdyshi/overfitting/blob/master/md_pic/6jbxq15.jpg)
 > L1范数是指向量中各个元素绝对值之和，也叫“稀疏规则算子”。L1范数是L0范数的最优凸近似，而且它比L0范数要容易优化求解
 
 - L2
+![数据清洗](https://github.com/gdyshi/overfitting/blob/master/md_pic/9WnBBu1.jpg)
 > L2范数是指向量各元素的平方和然后求平方根。使得参数w变小加剧的效果。更小的参数值w意味着模型的复杂度更低，对训练数据的拟合刚刚好（奥卡姆剃刀），不会过分拟合训练数据，从而使得不会过拟合，以提高模型的泛化能力。
 > 使矩阵可逆（存在唯一解）
 
 ### 网络结构正则化
 - dropout
+![数据清洗](https://github.com/gdyshi/overfitting/blob/master/md_pic/G9QTbi9.png)
 > 过拟合，可以通过阻止某些特征的协同作用来缓解。在训练时候以一定的概率p来跳过一定的神经元
 
 # 实例
-[](http://playground.tensorflow.org/#activation=tanh&regularization=L2&batchSize=10&dataset=xor&regDataset=reg-plane&learningRate=0.01&regularizationRate=0.01&noise=20&networkShape=8,5,4,2&seed=0.55923&showTestData=false&discretize=false&percTrainData=50&x=true&y=true&xTimesY=false&xSquared=false&ySquared=false&cosX=false&sinX=false&cosY=false&sinY=false&collectStats=false&problem=classification&initZero=false&hideText=false)
+[a neural network playground](http://playground.tensorflow.org/#activation=tanh&regularization=L2&batchSize=10&dataset=xor&regDataset=reg-plane&learningRate=0.01&regularizationRate=0.01&noise=20&networkShape=8,5,4,2&seed=0.55923&showTestData=false&discretize=false&percTrainData=50&x=true&y=true&xTimesY=false&xSquared=false&ySquared=false&cosX=false&sinX=false&cosY=false&sinY=false&collectStats=false&problem=classification&initZero=false&hideText=false)
+>具体代码见[GITHUB](https://github.com/gdyshi/overfitting.git)
+- 训练框架：TensorFlow
+- 数据集：numpy 生成上下半圆分类数据
+- 神经网络类型：3隐藏层，tanh激活
+- 训练次数：20000
+- 针对原始状态、数据清洗、增加数据量、变化学习率、简化模型、L1正则化、L2正则化、dropout等在同样训练次数下的训练集和测试集loss值对比
+
+| 序号  | 方法                      | 100*训练集loss值              | 100*测试集loss值|
+| :------------- | :------------- | :------------- | :-------------  |
+| 1 |原始状态                 | 0.377945      | 0.884091  |
+| 2 |数据清洗           | 0.031726      | 0.207343  |
+| 3 |增加数据量  | 0.499281      | 0.467030  |
+| 4 |变化学习率  | 0.456729    | 0.502236  |
+| 5 |简化模型  | 0.351006    | 0.493120  |
+| 6 |L1正则化  | 0.681640    | 0.729197  |
+| 7 |L2正则化  | 0.595900    | 0.742676  |
+| 8 |dropout  | 0.606940    | 0.614125  |
+
+## 原始状态拟合图
+![原始状态](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_1.png)
+## 使用数据清洗拟合图
+![数据清洗](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_2.png)
+## 使用增加数据量拟合图
+![增加数据量](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_3.png)
+## 使用变化学习率拟合图
+![变化学习率](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_4.png)
+## 使用简化模型拟合图
+![简化模型](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_5.png)
+## 使用L1正则化拟合图
+![L1正则化](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_6.png)
+## 使用L2正则化拟合图
+![L2正则化](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_7.png)
+## 使用dropout拟合图
+![dropout](https://github.com/gdyshi/overfitting/blob/master/md_pic/Figure_8.png)
+
 # 结论
 > 从数据、模型、训练方法三个方向入手
+模型、训练方法上需要增加调整参数，且增加的调整参数变化对结果影响较大。需要持续找出参数与原有分布的规律
 
 ---
 参考资料
